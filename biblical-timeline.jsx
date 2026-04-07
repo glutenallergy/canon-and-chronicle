@@ -1872,7 +1872,8 @@ export default function BiblicalTimeline() {
   const [activeSubs, setActiveSubs] = useState(() => new Set(DEFAULT_ACTIVE_SUBCATEGORIES));
   const [activeTraditions, setActiveTraditions] = useState(() => new Set(["jewish", "protestant", "catholic", "orthodox"]));
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
-  const [soloView, setSoloView] = useState(false); // when true, only the selected item shows on timeline
+  const [soloView, setSoloView] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const [selectedKey, setSelectedKey] = useState(null);
   // Initial view fits the default visible data (not the full coordinate range)
@@ -2295,11 +2296,11 @@ export default function BiblicalTimeline() {
       {/* ─── HEADER ─── */}
       <header className="bt-header">
         <div className="bt-brand">
-          <div className="bt-mark">
+          <button className="bt-mark" onClick={() => setInfoOpen(true)} aria-label="About & Help" title="About & How to Use">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
               <path d="M12 2 L12 22 M4 6 L20 6 M5 12 L19 12 M6 18 L18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
-          </div>
+          </button>
           <div>
             <div className="bt-brand-name">Canon <span className="bt-amp">&amp;</span> Chronicle</div>
             <div className="bt-brand-sub">The Making of the Bible · 2000 BCE — 1947 CE</div>
@@ -2714,6 +2715,8 @@ export default function BiblicalTimeline() {
         />
       )}
 
+      {infoOpen && <InfoOverlay onClose={() => setInfoOpen(false)} />}
+
       <Styles />
     </div>
   );
@@ -2921,6 +2924,159 @@ function Navigator({ data, filters, viewStart, viewEnd, setView, onReset, onZoom
 
       <div className="bt-nav-hint">
         <kbd>drag</kbd> pan · <kbd>handles</kbd> resize · <kbd>click</kbd> jump · <kbd>⌘</kbd>+<kbd>wheel</kbd> zoom timeline
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════ INFO OVERLAY (How-to + About) ═══════════════ */
+function InfoOverlay({ onClose }) {
+  const [tab, setTab] = useState("howto");
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="bt-info-overlay">
+      <div className="bt-info-backdrop" onClick={onClose} />
+      <div className="bt-info-card" role="dialog" aria-label="About Canon & Chronicle">
+        <div className="bt-info-header">
+          <div className="bt-info-tabs">
+            <button className={`bt-info-tab ${tab === "howto" ? "active" : ""}`} onClick={() => setTab("howto")}>How to Use</button>
+            <button className={`bt-info-tab ${tab === "about" ? "active" : ""}`} onClick={() => setTab("about")}>About</button>
+          </div>
+          <button className="bt-close" onClick={onClose} aria-label="Close">
+            <svg width="14" height="14" viewBox="0 0 14 14">
+              <path d="M3 3 L11 11 M11 3 L3 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="bt-info-body">
+          {tab === "howto" ? (
+            <div className="bt-info-howto">
+              <div className="bt-info-section">
+                <div className="bt-info-icon">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M2 10 L18 10 M6 6 L6 14 M14 6 L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </div>
+                <div>
+                  <h3>Timeline</h3>
+                  <p>Scroll horizontally to pan through history. Pinch or use <kbd>Cmd</kbd>+<kbd>scroll</kbd> to zoom in and out. The vertical columns of light mark key milestone events — these stay visible at every zoom level to orient you.</p>
+                </div>
+              </div>
+
+              <div className="bt-info-section">
+                <div className="bt-info-icon">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="7" width="16" height="6" rx="2" stroke="currentColor" strokeWidth="1.5"/><rect x="6" y="8" width="5" height="4" rx="1" fill="currentColor" opacity="0.4"/></svg>
+                </div>
+                <div>
+                  <h3>Navigator</h3>
+                  <p>The minimap at the bottom shows where you are in the full 4,000-year span. Drag the highlighted window to pan. Drag either handle to expand or contract your view. Click anywhere on the track to jump. The colored ticks show event density.</p>
+                </div>
+              </div>
+
+              <div className="bt-info-section">
+                <div className="bt-info-icon">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M2 5 L18 5 M4 10 L16 10 M6 15 L14 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </div>
+                <div>
+                  <h3>Filters</h3>
+                  <p>Click <b>Filters</b> in the top-right to open the category panel. Toggle subcategories on or off. Use the target icon <b>(&#x2299;)</b> to solo a single category. The <b>Canon Traditions</b> row at the bottom filters books by Jewish, Protestant, Catholic, or Orthodox inclusion. Use <b>All / None</b> to control entire groups at once.</p>
+                </div>
+              </div>
+
+              <div className="bt-info-section">
+                <div className="bt-info-icon">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="12" width="16" height="6" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 15 L15 15" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/><path d="M3 8 L10 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </div>
+                <div>
+                  <h3>Reader</h3>
+                  <p>Click any event or book marker to open the reader panel at the bottom. Use the <b>Prev/Next</b> arrows to step through events. For books with narrative spans, the <b>Solo view</b> button isolates that book and shows its story period versus when it was written. Each entry includes scholarly context, quotes, sources, and cross-references.</p>
+                </div>
+              </div>
+
+              <div className="bt-info-section">
+                <div className="bt-info-icon">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 16 C4 16 6 8 10 8 C14 8 16 16 16 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="10" cy="5" r="2" stroke="currentColor" strokeWidth="1.5"/></svg>
+                </div>
+                <div>
+                  <h3>Glossary</h3>
+                  <p>Scholarly terms in the reader text appear with a <span style={{borderBottom: "1px dotted #F5A524", color: "#F5A524"}}>dotted underline</span>. Click any term to see its definition in a popover — and navigate between related terms without leaving the reader. About 30 terms are covered, from "Documentary Hypothesis" to "homoousios."</p>
+                </div>
+              </div>
+
+              <div className="bt-info-section">
+                <div className="bt-info-icon">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="5" y="6" width="10" height="8" rx="4" stroke="currentColor" strokeWidth="1.5"/><text x="10" y="12" textAnchor="middle" fontSize="7" fontWeight="700" fill="currentColor">5</text></svg>
+                </div>
+                <div>
+                  <h3>Clusters</h3>
+                  <p>When events are too close together, they collapse into numbered pills showing the count. Click a cluster to zoom in and separate them — or, if the events share the same date, a selection menu will open so you can pick the one you want. Hover any cluster to preview its contents.</p>
+                </div>
+              </div>
+
+              <div className="bt-info-section">
+                <div className="bt-info-icon">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" strokeWidth="1.5"/><path d="M7 10 L9 12 L13 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+                <div>
+                  <h3>Keyboard Shortcuts</h3>
+                  <p><kbd>+</kbd> / <kbd>-</kbd> zoom in/out &middot; <kbd>0</kbd> reset view &middot; <kbd>&larr;</kbd> / <kbd>&rarr;</kbd> step between events &middot; <kbd>Esc</kbd> close panels</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bt-info-about">
+              <div className="bt-info-about-hero">
+                <div className="bt-info-about-mark">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2 L12 22 M4 6 L20 6 M5 12 L19 12 M6 18 L18 18" stroke="#F5A524" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="bt-info-about-title">Canon <span className="bt-amp">&amp;</span> Chronicle</h2>
+                  <p className="bt-info-about-tagline">An interactive timeline of how the Bible was formed</p>
+                </div>
+              </div>
+
+              <div className="bt-info-about-section">
+                <h3>What this is</h3>
+                <p>Canon & Chronicle is a factual, research-driven overview of how the Bible came together over four thousand years — from the earliest oral traditions through the Dead Sea Scrolls discovery in 1947. It presents historical events, scholarly consensus, and documented disputes without advocating for any particular theological position.</p>
+                <p>Traditional and critical perspectives are shown side by side — who tradition says wrote each book, what modern scholarship concludes, and where they agree or disagree — so readers can explore the evidence and form their own understanding.</p>
+              </div>
+
+              <div className="bt-info-about-section">
+                <h3>What this is not</h3>
+                <p>This is not a devotional tool, a theological argument, or a statement of faith. It does not attempt to prove or disprove any religious claim. The goal is simply to make the complex history of biblical formation accessible to anyone curious about it — believer, skeptic, or scholar.</p>
+              </div>
+
+              <div className="bt-info-about-section">
+                <h3>Sources</h3>
+                <p>The timeline draws on a range of primary texts, academic references, and historical scholarship, including:</p>
+                <ul>
+                  <li>Biblical texts (Hebrew Bible, Septuagint, New Testament, deuterocanonical books)</li>
+                  <li>Ancient sources (Josephus, Tacitus, Eusebius, Athanasius, Jerome, Augustine)</li>
+                  <li>Modern scholarship (Wellhausen, Friedman, Ehrman, Metzger, Finkelstein, Brown, Collins, and others cited per entry)</li>
+                  <li>Archaeological evidence (Dead Sea Scrolls, Nag Hammadi, Tel Dan Stele, Cyrus Cylinder)</li>
+                </ul>
+                <p>Individual entries cite their specific sources in the reader panel.</p>
+              </div>
+
+              <div className="bt-info-about-section">
+                <h3>Contact</h3>
+                <p>Questions, corrections, or suggestions:<br/>
+                <a href="mailto:hello@canonandchronicle.com" className="bt-info-email">hello@canonandchronicle.com</a></p>
+              </div>
+
+              <div className="bt-info-about-footer">
+                <p>Built with <a href="https://claude.ai" target="_blank" rel="noopener noreferrer">Claude</a> &middot; <a href="https://github.com/glutenallergy/canon-and-chronicle" target="_blank" rel="noopener noreferrer">Source on GitHub</a></p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -3482,7 +3638,17 @@ function Styles() {
         display: inline-flex; align-items: center; justify-content: center;
         color: var(--accent);
         box-shadow: 0 0 24px rgba(245,165,36,0.12), inset 0 1px 0 rgba(255,255,255,0.04);
+        cursor: pointer;
+        transition: all 200ms cubic-bezier(0.2, 0.9, 0.3, 1);
+        padding: 0;
+        font-family: inherit;
       }
+      .bt-mark:hover {
+        border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+        box-shadow: 0 0 32px rgba(245,165,36,0.2), inset 0 1px 0 rgba(255,255,255,0.06);
+        transform: scale(1.05);
+      }
+      .bt-mark:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
       .bt-brand-name {
         font-family: 'Instrument Serif', 'Geist', serif;
         font-size: 22px;
@@ -3586,6 +3752,220 @@ function Styles() {
       .bt-chip-solo:focus-visible {
         outline: 2px solid var(--accent);
         outline-offset: -2px;
+      }
+
+      /* ─── Info Overlay ─── */
+      .bt-info-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: btInfoIn 300ms cubic-bezier(0.2, 0.9, 0.3, 1);
+      }
+      @keyframes btInfoIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .bt-info-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+      .bt-info-card {
+        position: relative;
+        width: min(680px, calc(100vw - 32px));
+        max-height: min(85vh, 720px);
+        background: rgba(18, 18, 22, 0.97);
+        backdrop-filter: blur(28px) saturate(1.4);
+        -webkit-backdrop-filter: blur(28px) saturate(1.4);
+        border: 1px solid var(--line-2);
+        border-radius: 16px;
+        box-shadow:
+          0 1px 0 rgba(255,255,255,0.05) inset,
+          0 32px 80px -16px rgba(0,0,0,0.8),
+          0 12px 32px -8px rgba(0,0,0,0.5);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .bt-info-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px 0;
+        flex-shrink: 0;
+      }
+      .bt-info-tabs {
+        display: flex;
+        gap: 2px;
+        background: rgba(255,255,255,0.04);
+        border-radius: 8px;
+        padding: 3px;
+      }
+      .bt-info-tab {
+        padding: 8px 18px;
+        border-radius: 6px;
+        border: none;
+        background: transparent;
+        color: var(--text-3);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 160ms ease;
+      }
+      .bt-info-tab:hover { color: var(--text); }
+      .bt-info-tab.active {
+        background: rgba(255,255,255,0.08);
+        color: var(--text);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      }
+      .bt-info-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .bt-info-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px 24px 28px;
+      }
+      .bt-info-section {
+        display: flex;
+        gap: 14px;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .bt-info-section:last-child { border-bottom: none; }
+      .bt-info-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(245,165,36,0.1);
+        border: 1px solid rgba(245,165,36,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: var(--accent);
+      }
+      .bt-info-section h3 {
+        font-family: 'Geist', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0 0 5px;
+        color: var(--text);
+        letter-spacing: 0.01em;
+      }
+      .bt-info-section p {
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--text-2);
+        margin: 0;
+      }
+      .bt-info-section kbd {
+        font-family: 'Geist Mono', monospace;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid var(--line);
+        color: var(--text-3);
+      }
+
+      /* About tab */
+      .bt-info-about-hero {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 20px;
+      }
+      .bt-info-about-mark {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #1C1C22, #0A0A0B);
+        border: 1px solid var(--line-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 24px rgba(245,165,36,0.12);
+      }
+      .bt-info-about-title {
+        font-family: 'Instrument Serif', 'Geist', serif;
+        font-size: 28px;
+        font-weight: 400;
+        margin: 0;
+        color: var(--text);
+        letter-spacing: -0.015em;
+      }
+      .bt-info-about-tagline {
+        font-size: 13px;
+        color: var(--text-3);
+        font-style: italic;
+        margin: 4px 0 0;
+      }
+      .bt-info-about-section {
+        margin-bottom: 22px;
+      }
+      .bt-info-about-section h3 {
+        font-family: 'Geist Mono', monospace;
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 8px;
+      }
+      .bt-info-about-section p {
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--text-2);
+        margin: 0 0 10px;
+        max-width: 58ch;
+      }
+      .bt-info-about-section ul {
+        margin: 8px 0 0;
+        padding: 0 0 0 20px;
+        font-size: 12.5px;
+        line-height: 1.7;
+        color: var(--text-2);
+      }
+      .bt-info-about-section li { margin-bottom: 4px; }
+      .bt-info-email {
+        color: var(--accent);
+        text-decoration: none;
+        border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+        transition: all 140ms ease;
+      }
+      .bt-info-email:hover {
+        border-bottom-color: var(--accent);
+      }
+      .bt-info-about-footer {
+        padding-top: 18px;
+        border-top: 1px solid var(--line);
+        margin-top: 8px;
+      }
+      .bt-info-about-footer p {
+        font-size: 11px;
+        color: var(--text-4);
+        margin: 0;
+      }
+      .bt-info-about-footer a {
+        color: var(--text-3);
+        text-decoration: none;
+        border-bottom: 1px solid var(--line);
+        transition: color 140ms ease;
+      }
+      .bt-info-about-footer a:hover { color: var(--text); }
+
+      @media (max-width: 720px) {
+        .bt-info-card { border-radius: 12px; }
+        .bt-info-body { padding: 16px 18px 24px; }
+        .bt-info-about-title { font-size: 22px; }
       }
 
       /* ─── Header right (filter toggle + count) ─── */
