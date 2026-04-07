@@ -1965,7 +1965,6 @@ export default function BiblicalTimeline() {
   const visSpan = viewEnd - viewStart;
   // Pixel-based edge padding — events never clip at the left/right edges regardless of zoom
   const EDGE_PAD = 140;
-  const usableW = Math.max(200, wrapW - 2 * EDGE_PAD);
   const pxPerYear = usableW / visSpan;
   const svgWidth = SPAN * pxPerYear + 2 * EDGE_PAD;
   const yearToSvgX = (y) => EDGE_PAD + (y - MIN_YR) * pxPerYear;
@@ -2006,6 +2005,8 @@ export default function BiblicalTimeline() {
       requestAnimationFrame(() => {
         if (!rafRef.current) suppressScroll.current = false;
       });
+      // Safety: never stay suppressed for more than 200ms
+      setTimeout(() => { suppressScroll.current = false; }, 200);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewStart, pxPerYear]);
@@ -2221,6 +2222,14 @@ export default function BiblicalTimeline() {
     return placedFiltered.filter(e => e.anchorX >= lo && e.anchorX <= hi);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [placedFiltered, viewStart, viewEnd, svgWidth]);
+
+  // Clear hover if the hovered entry gets virtualized away (e.g., user zooms past it)
+  useEffect(() => {
+    if (hoveredKey && !visibleEntries.some(e => e.groupKey === hoveredKey)) {
+      setHoveredKey(null);
+      setHover(null);
+    }
+  }, [visibleEntries, hoveredKey]);
 
   /* ─── Reorder so hovered entry renders last (on top via SVG painter order) ─── */
   const renderEntries = useMemo(() => {
@@ -2750,10 +2759,17 @@ function Navigator({ data, filters, viewStart, viewEnd, setView, onReset, onZoom
 
   const rawWinX = yearToX(viewStart);
   const rawWinR = yearToX(viewEnd);
-  // Clamp the drawable handle positions so they can't overshoot the track
-  const winX = clamp(rawWinX, TRACK_PAD, TRACK_PAD + trackW - HANDLE_HALF);
-  const winR = clamp(rawWinR, TRACK_PAD + HANDLE_HALF, TRACK_PAD + trackW);
-  const winW = Math.max(22, winR - winX);
+  // Clamp handles so they stay inside the track with minimum window width
+  const MIN_WIN_W = 28; // minimum draggable window width
+  let winX = clamp(rawWinX, TRACK_PAD, TRACK_PAD + trackW - MIN_WIN_W);
+  let winR = clamp(rawWinR, winX + MIN_WIN_W, TRACK_PAD + trackW);
+  // If window is still too narrow (deep zoom), enforce minimum
+  if (winR - winX < MIN_WIN_W) {
+    const center = (winX + winR) / 2;
+    winX = clamp(center - MIN_WIN_W / 2, TRACK_PAD, TRACK_PAD + trackW - MIN_WIN_W);
+    winR = winX + MIN_WIN_W;
+  }
+  const winW = winR - winX;
 
   const visibleData = useMemo(
     () => data,
