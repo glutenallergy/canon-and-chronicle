@@ -1965,6 +1965,7 @@ export default function BiblicalTimeline() {
   const visSpan = viewEnd - viewStart;
   // Pixel-based edge padding — events never clip at the left/right edges regardless of zoom
   const EDGE_PAD = 140;
+  const usableW = Math.max(200, wrapW - 2 * EDGE_PAD);
   const pxPerYear = usableW / visSpan;
   const svgWidth = SPAN * pxPerYear + 2 * EDGE_PAD;
   const yearToSvgX = (y) => EDGE_PAD + (y - MIN_YR) * pxPerYear;
