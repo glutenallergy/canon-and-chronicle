@@ -4283,6 +4283,7 @@ function Styles() {
         height: 100%;
         overflow-x: auto;
         overflow-y: hidden;
+        overscroll-behavior-x: none;  /* prevent browser back/forward on overscroll */
       }
       .bt-scroll:focus-visible { outline: none; }
       .bt-svg { display: block; }
