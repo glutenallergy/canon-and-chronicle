@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "canon",
+      "runtimeExecutable": "/usr/local/bin/node",
+      "runtimeArgs": ["/Users/michael/Documents/Code_Projects/The Canon/node_modules/.bin/vite"],
+      "port": 5173
+    }
+  ]
+}
